@@ -15,14 +15,15 @@ app = FastAPI()
 # CORS middleware để frontend React có thể gọi API
 app.add_middleware(
     CORSMiddleware,
-    origins = [
-    "https://esg-monitor-agent-website.onrender.com",  # domain frontend của bạn
-    "http://localhost:3000",  # nếu chạy local frontend
-],
+    allow_origins=[
+        "https://esg-monitor-agent-website.onrender.com",
+        "http://localhost:3000"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 FINNHUB_API_KEY = "d1qsvrhr01qo4qd99jkgd1qsvrhr01qo4qd99jl0"
 
