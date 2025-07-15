@@ -12,10 +12,11 @@
     "remark-gfm": "^4.0.1"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test"
-  },
+  "start": "react-scripts start",
+  "build": "react-scripts build",
+  "test": "react-scripts test",
+  "postinstall": "chmod +x node_modules/.bin/react-scripts"
+},
   "proxy": "http://localhost:8000",
   "browserslist": {
     "production": [
