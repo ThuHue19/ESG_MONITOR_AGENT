@@ -4,7 +4,8 @@ import ArticleDetail from './components/ArticleDetail';
 import ReactMarkdown from 'react-markdown';
 import EsgInfo from './components/EsgInfo';
 
-// Map công ty sang mã ticker
+const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+
 const companyToTicker = {
   Tesla: 'TSLA',
   'First Solar': 'FSLR',
@@ -48,16 +49,13 @@ function App() {
       setError('Speech recognition not supported in this browser.');
       return;
     }
-
     const recognition = new SpeechRecognition();
     recognition.lang = 'en-US';
     recognition.start();
-
     recognition.onresult = (event) => {
       const transcript = event.results[0][0].transcript;
       setInput(transcript);
     };
-
     recognition.onerror = (event) => {
       console.error('Speech error:', event.error);
       setError('Speech recognition failed.');
@@ -81,15 +79,13 @@ function App() {
     setIsQuestion(questionCheck);
 
     if (questionCheck) {
-      // Xử lý câu hỏi (gửi tới /api/search_query)
-      fetch('http://localhost:8000/api/search_query', {
+      fetch(`${API_BASE}/api/search_query`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ question: input }),
       })
         .then(res => res.json())
         .then(data => {
-          console.log('Search query response:', data); // Debug response
           if (data.error) {
             setError(data.error);
           } else {
@@ -98,8 +94,7 @@ function App() {
             setSummaries({
               [company]: `ESG Scores: Environmental ${data.environment_score ?? 'N/A'}, Social ${data.social_score ?? 'N/A'}, Governance ${data.governance_score ?? 'N/A'}, Total ${data.total_score ?? 'N/A'}`,
             });
-            // Fetch articles for context
-            fetch('http://localhost:8000/api/analyze_companies', {
+            fetch(`${API_BASE}/api/analyze_companies`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ companies: [company] }),
@@ -123,7 +118,6 @@ function App() {
         })
         .finally(() => setLoading(false));
     } else {
-      // Xử lý tìm kiếm công ty trực tiếp
       const names = input
         .split(/,| and | & /i)
         .map(n => n.trim())
@@ -135,7 +129,7 @@ function App() {
         return;
       }
 
-      fetch('http://localhost:8000/api/analyze_companies', {
+      fetch(`${API_BASE}/api/analyze_companies`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ companies: names }),
@@ -148,16 +142,12 @@ function App() {
 
           data.forEach(companyData => {
             companyData.articles.forEach(article => {
-              allArticles.push({
-                ...article,
-                company: companyData.company,
-              });
+              allArticles.push({ ...article, company: companyData.company });
             });
             newSummaries[companyData.company] = companyData.overall_summary;
 
-            // Fetch ESG data for each company
             const ticker = companyToTicker[companyData.company] || companyData.company;
-            fetch('http://localhost:8000/api/finnhub_esg', {
+            fetch(`${API_BASE}/api/finnhub_esg`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ symbol: ticker }),
@@ -210,17 +200,8 @@ function App() {
         <button onClick={handleSpeech} style={{ padding: 8, marginLeft: 5 }}>🎤 Speak</button>
       </div>
 
-      {/* Autocomplete */}
       {input && !isQuestion && (
-        <ul
-          style={{
-            background: '#f9f9f9',
-            listStyle: 'none',
-            padding: 5,
-            border: '1px solid #ccc',
-            maxWidth: 400,
-          }}
-        >
+        <ul style={{ background: '#f9f9f9', listStyle: 'none', padding: 5, border: '1px solid #ccc', maxWidth: 400 }}>
           {companyList
             .filter(c => c.toLowerCase().includes(input.toLowerCase()) && !input.includes(c))
             .map((c, i) => (
@@ -235,7 +216,6 @@ function App() {
         </ul>
       )}
 
-      {/* Search history */}
       {history.length > 0 && (
         <div style={{ marginTop: 10 }}>
           <strong>Search History:</strong>
@@ -252,17 +232,13 @@ function App() {
       {loading && <p>Loading...</p>}
       {error && <p style={{ color: 'red' }}>{error}</p>}
 
-      {/* Company Summaries with ESG display */}
       {Object.entries(summaries).length > 0 && (
         <div style={{ marginTop: 20, background: '#f5f5f5', padding: 10, borderRadius: 5 }}>
           <h2>Company Summaries</h2>
           {Object.entries(summaries).map(([company, summary]) => (
             <div key={company} style={{ marginBottom: 20 }}>
               <h3>{company}</h3>
-              <EsgInfo
-                symbol={companyToTicker[company] || company}
-                esgData={esgData[company]}
-              />
+              <EsgInfo symbol={companyToTicker[company] || company} esgData={esgData[company]} />
               <h4>Investment Recommendation</h4>
               <ReactMarkdown>{summary}</ReactMarkdown>
             </div>
