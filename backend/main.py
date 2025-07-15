@@ -155,41 +155,71 @@ async def finnhub_esg(request: ESGRequest):
     }
 
 def analyze_company_esg(company: str) -> CompanyAnalysisResponse:
-    articles = fetch_news(company, limit=5)
-    if not articles:
+    try:
+        articles = fetch_news(company, limit=5)
+        print(f"✅ Articles fetched for {company}: {len(articles)}")
+
+        if not articles:
+            return CompanyAnalysisResponse(
+                company=company,
+                articles=[],
+                overall_summary=f"No articles found for {company}. This may be due to limited news coverage."
+            )
+
+        analyzed_articles = []
+        analyses = []
+        for article in articles:
+            title = article.get('title', '')
+            content = article.get('content', '')
+            if not title or not content:
+                print(f"⚠️ Skipped article with missing title/content: {article}")
+                continue
+
+            try:
+                analysis = analyze_article(title, content, company)
+                analyses.append(analysis)
+                analyzed_articles.append(
+                    ArticleAnalysis(
+                        title=title,
+                        url=article.get('url', ''),
+                        analysis=analysis
+                    )
+                )
+            except Exception as e:
+                print(f"⚠️ Failed to analyze article: {e}")
+
+        overall_summary = summarize_overall(company, analyses)
+        return CompanyAnalysisResponse(
+            company=company,
+            articles=analyzed_articles,
+            overall_summary=overall_summary
+        )
+    except Exception as e:
+        print(f"❗ Error in analyze_company_esg for {company}: {e}")
         return CompanyAnalysisResponse(
             company=company,
             articles=[],
-            overall_summary=f"No articles found for {company}. This may be due to limited news coverage."
+            overall_summary=f"Error analyzing {company}: {str(e)}"
         )
 
-    analyzed_articles = []
-    analyses = []
-    for article in articles:
-        analysis = analyze_article(article['title'], article['content'], company)
-        analyses.append(analysis)
-        analyzed_articles.append(
-            ArticleAnalysis(
-                title=article['title'],
-                url=article['url'],
-                analysis=analysis
-            )
-        )
-
-    overall_summary = summarize_overall(company, analyses)
-    return CompanyAnalysisResponse(
-        company=company,
-        articles=analyzed_articles,
-        overall_summary=overall_summary
-    )
 
 @app.post("/api/analyze_companies", response_model=List[CompanyAnalysisResponse])
 async def analyze_companies_api(request: CompanyRequest):
     results = []
     for company in request.companies:
-        result = analyze_company_esg(company)
-        results.append(result)
+        try:
+            print(f"🚀 Analyzing company: {company}")
+            result = analyze_company_esg(company)
+            results.append(result)
+        except Exception as e:
+            print(f"❌ Error analyzing {company}: {e}")
+            results.append(CompanyAnalysisResponse(
+                company=company,
+                articles=[],
+                overall_summary=f"Error analyzing {company}: {str(e)}"
+            ))
     return results
+
 
 @app.get("/api/analyze_default_companies", response_model=List[CompanyAnalysisResponse])
 async def analyze_default_companies():
