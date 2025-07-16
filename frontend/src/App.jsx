@@ -4,7 +4,10 @@ import ArticleDetail from './components/ArticleDetail';
 import ReactMarkdown from 'react-markdown';
 import EsgInfo from './components/EsgInfo';
 
-const API_BASE = "https://esg-monitor-agent.onrender.com" || 'http://localhost:8000';
+const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:8000'
+  : 'https://esg-monitor-agent.onrender.com';
+
 
 const companyToTicker = {
   Tesla: 'TSLA',
