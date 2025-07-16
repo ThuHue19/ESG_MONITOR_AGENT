@@ -1,42 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 
-function EsgInfo({ symbol, esgData: propEsgData, apiBase }) {
-  const [esgData, setEsgData] = useState(propEsgData || null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-
-  useEffect(() => {
-    console.log('EsgInfo props:', { symbol, propEsgData });
-    if (propEsgData) {
-      setEsgData(propEsgData);
-      return;
-    }
-
-    if (!symbol) return;
-
-    setLoading(true);
-    setError('');
-    setEsgData(null);
-
-    fetch(`${apiBase}/api/finnhub_esg`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ symbol }),
-    })
-      .then(res => res.json())
-      .then(data => {
-        console.log('Finnhub ESG response:', data);
-        if (data.error) {
-          throw new Error(data.error);
-        }
-        setEsgData(data);
-      })
-      .catch(err => setError(`Failed to fetch ESG data: ${err.message}`))
-      .finally(() => setLoading(false));
-  }, [symbol, propEsgData, apiBase]);
-
-  if (loading) return <p>Loading ESG data...</p>;
-  if (error) return <p style={{ color: 'red' }}>{error}</p>;
+function EsgInfo({ symbol, esgData }) {
   if (!esgData) return null;
 
   return (

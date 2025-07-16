@@ -4,10 +4,10 @@ import ArticleDetail from './components/ArticleDetail';
 import ReactMarkdown from 'react-markdown';
 import EsgInfo from './components/EsgInfo';
 
-const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-  ? 'http://localhost:8000'
-  : 'https://esg-monitor-agent.onrender.com';
-
+const API_BASE =
+  window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://localhost:8000'
+    : 'https://esg-monitor-agent.onrender.com';
 
 const companyToTicker = {
   Tesla: 'TSLA',
@@ -31,7 +31,6 @@ function App() {
   const [error, setError] = useState('');
   const [history, setHistory] = useState([]);
   const [summaries, setSummaries] = useState({});
-  const [suggestedCompanies, setSuggestedCompanies] = useState([]);
   const [esgData, setEsgData] = useState({});
   const [isQuestion, setIsQuestion] = useState(false);
 
@@ -73,7 +72,6 @@ function App() {
     setSelectedArticle(null);
     setError('');
     setSummaries({});
-    setSuggestedCompanies([]);
     setEsgData({});
     setIsQuestion(false);
 
@@ -147,22 +145,12 @@ function App() {
             companyData.articles.forEach(article => {
               allArticles.push({ ...article, company: companyData.company });
             });
+
             newSummaries[companyData.company] = companyData.overall_summary;
 
-            const ticker = companyToTicker[companyData.company] || companyData.company;
-            fetch(`${API_BASE}/api/finnhub_esg`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ symbol: ticker }),
-            })
-              .then(res => res.json())
-              .then(esg => {
-                if (!esg.error) {
-                  newEsgData[companyData.company] = esg;
-                  setEsgData(prev => ({ ...prev, [companyData.company]: esg }));
-                }
-              })
-              .catch(() => console.error(`Failed to fetch ESG for ${companyData.company}`));
+            if (companyData.esg) {
+              newEsgData[companyData.company] = companyData.esg;
+            }
           });
 
           if (allArticles.length === 0) {
@@ -171,6 +159,7 @@ function App() {
 
           setArticles(allArticles);
           setSummaries(newSummaries);
+          setEsgData(newEsgData);
           saveHistory(input);
         })
         .catch(() => {
@@ -242,11 +231,9 @@ function App() {
             <div key={company} style={{ marginBottom: 20 }}>
               <h3>{company}</h3>
               <EsgInfo
-  symbol={companyToTicker[company] || company}
-  esgData={esgData[company]}
-  apiBase={API_BASE}   // thêm prop apiBase
-/>
-
+                symbol={companyToTicker[company] || company}
+                esgData={esgData[company]}
+              />
               <h4>Investment Recommendation</h4>
               <ReactMarkdown>{summary}</ReactMarkdown>
             </div>
