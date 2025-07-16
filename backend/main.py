@@ -155,53 +155,53 @@ async def search_query(request: AskRequest):
 #         "error": f"No ESG data found for ticker '{symbol}'. This may be due to limited public ESG disclosures."
 #     }
 
-# def analyze_company_esg(company: str) -> CompanyAnalysisResponse:
-#     try:
-#         articles = fetch_news(company, limit=5)
-#         print(f"✅ Articles fetched for {company}: {len(articles)}")
+def analyze_company_esg(company: str) -> CompanyAnalysisResponse:
+    try:
+        articles = fetch_news(company, limit=5)
+        print(f"✅ Articles fetched for {company}: {len(articles)}")
 
-#         if not articles:
-#             return CompanyAnalysisResponse(
-#                 company=company,
-#                 articles=[],
-#                 overall_summary=f"No articles found for {company}. This may be due to limited news coverage."
-#             )
+        if not articles:
+            return CompanyAnalysisResponse(
+                company=company,
+                articles=[],
+                overall_summary=f"No articles found for {company}. This may be due to limited news coverage."
+            )
 
-#         analyzed_articles = []
-#         analyses = []
-#         for article in articles:
-#             title = article.get('title', '')
-#             content = article.get('content', '')
-#             if not title or not content:
-#                 print(f"⚠️ Skipped article with missing title/content: {article}")
-#                 continue
+        analyzed_articles = []
+        analyses = []
+        for article in articles:
+            title = article.get('title', '')
+            content = article.get('content', '')
+            if not title or not content:
+                print(f"⚠️ Skipped article with missing title/content: {article}")
+                continue
 
-#             try:
-#                 analysis = analyze_article(title, content, company)
-#                 analyses.append(analysis)
-#                 analyzed_articles.append(
-#                     ArticleAnalysis(
-#                         title=title,
-#                         url=article.get('url', ''),
-#                         analysis=analysis
-#                     )
-#                 )
-#             except Exception as e:
-#                 print(f"⚠️ Failed to analyze article: {e}")
+            try:
+                analysis = analyze_article(title, content, company)
+                analyses.append(analysis)
+                analyzed_articles.append(
+                    ArticleAnalysis(
+                        title=title,
+                        url=article.get('url', ''),
+                        analysis=analysis
+                    )
+                )
+            except Exception as e:
+                print(f"⚠️ Failed to analyze article: {e}")
 
-#         overall_summary = summarize_overall(company, analyses)
-#         return CompanyAnalysisResponse(
-#             company=company,
-#             articles=analyzed_articles,
-#             overall_summary=overall_summary
-#         )
-#     except Exception as e:
-#         print(f"❗ Error in analyze_company_esg for {company}: {e}")
-#         return CompanyAnalysisResponse(
-#             company=company,
-#             articles=[],
-#             overall_summary=f"Error analyzing {company}: {str(e)}"
-#         )
+        overall_summary = summarize_overall(company, analyses)
+        return CompanyAnalysisResponse(
+            company=company,
+            articles=analyzed_articles,
+            overall_summary=overall_summary
+        )
+    except Exception as e:
+        print(f"❗ Error in analyze_company_esg for {company}: {e}")
+        return CompanyAnalysisResponse(
+            company=company,
+            articles=[],
+            overall_summary=f"Error analyzing {company}: {str(e)}"
+        )
 
 
 @app.post("/api/analyze_companies", response_model=List[CompanyAnalysisResponse])
