@@ -277,34 +277,52 @@ style={{
       {error && <p style={{ color: 'red' }}>{error}</p>}
 
       {Object.entries(summaries).length > 0 && (
-  <div style={{ marginTop: 20, background: '#e3f2fd', padding: 15, borderRadius: 8 }}>
+  <div
+    style={{
+      marginTop: 20,
+      backgroundColor: '#e3f2fd',  // lớp nền nhạt bên ngoài
+      padding: 15,
+      borderRadius: 8,
+      border: '1px solid #90caf9',
+    }}
+  >
     <h2 style={{ color: '#0d47a1' }}>Company Summaries</h2>
     {Object.entries(summaries).map(([company, summary], idx) => (
-      <div key={company} style={{ marginBottom: 20 }}>
+      <div
+        key={company}
+        style={{
+          marginBottom: 20,
+          backgroundColor: 'rgba(13, 71, 161, 0.12)',  // lớp nền đậm hơn bên trong
+          padding: 20,
+          borderRadius: 8,
+          color: '#0d47a1',
+          lineHeight: 1.6,
+        }}
+      >
         <h3 style={{ color: '#0d47a1' }}>{company}</h3>
         <EsgInfo symbol={companyToTicker[company] || company} esgData={esgData[company]} />
         <h4 style={{ color: '#0d47a1' }}>Investment Recommendation</h4>
-        <div style={{ color: '#0d47a1', whiteSpace: 'pre-wrap' }}>
-          <ReactMarkdown
-  components={{
-    p: ({ node, ...props }) => (
-      <p style={{ color: '#0d47a1', marginBottom: 8 }} {...props} />
-    ),
-    // Bổ sung fallback để luôn đảm bảo text có style
-    root: ({ node, ...props }) => (
-      <div style={{ color: '#0d47a1' }} {...props} />
-    ),
-  }}
->
-  {summary}
-</ReactMarkdown>
-
-        </div>
-
+        <ReactMarkdown
+          components={{
+            p: ({ node, ...props }) => (
+              <p style={{ color: '#0d47a1', marginBottom: 8 }} {...props} />
+            ),
+            strong: ({ node, ...props }) => <strong style={{ color: '#0d47a1' }} {...props} />,
+            em: ({ node, ...props }) => <em style={{ color: '#0d47a1' }} {...props} />,
+            li: ({ node, ...props }) => <li style={{ color: '#0d47a1' }} {...props} />,
+            a: ({ node, ...props }) => <a style={{ color: '#0d47a1' }} {...props} />,
+            code: ({ node, ...props }) => <code style={{ color: '#0d47a1' }} {...props} />,
+            div: ({ node, ...props }) => <div style={{ color: '#0d47a1' }} {...props} />,
+            span: ({ node, ...props }) => <span style={{ color: '#0d47a1' }} {...props} />,
+          }}
+        >
+          {summary}
+        </ReactMarkdown>
       </div>
     ))}
   </div>
 )}
+
 
 
       <ArticleList articles={articles} onSelect={setSelectedArticle} />
