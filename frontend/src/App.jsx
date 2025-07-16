@@ -241,7 +241,12 @@ function App() {
           {Object.entries(summaries).map(([company, summary]) => (
             <div key={company} style={{ marginBottom: 20 }}>
               <h3>{company}</h3>
-              <EsgInfo symbol={companyToTicker[company] || company} esgData={esgData[company]} />
+              <EsgInfo
+  symbol={companyToTicker[company] || company}
+  esgData={esgData[company]}
+  apiBase={API_BASE}   // thêm prop apiBase
+/>
+
               <h4>Investment Recommendation</h4>
               <ReactMarkdown>{summary}</ReactMarkdown>
             </div>
