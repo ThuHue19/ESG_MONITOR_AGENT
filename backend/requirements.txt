@@ -1,32 +1,16 @@
 fastapi
-uvicorn[standard]
-
-# Giao tiếp API
+uvicorn
 requests
 httpx
-
-# Phân tích HTML và text
 beautifulsoup4
 tqdm
-
-# AI và LLM
 openai
 google-generativeai
-
-# Xử lý dữ liệu
 pandas
 numpy
-
-# Biến môi trường
 python-dotenv
-
-# Xử lý JSON nâng cao
 PyYAML
-
-# Hỗ trợ Google API (nếu bạn dùng gemini qua Google API Client)
 google-api-python-client
 google-auth
 google-auth-httplib2
-
-python-dotenv
-
+rapidfuzz

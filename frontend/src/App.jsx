@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import ArticleList from './components/ArticleList';
 import ArticleDetail from './components/ArticleDetail';
 import ReactMarkdown from 'react-markdown';
@@ -20,9 +20,7 @@ const companyToTicker = {
   'ATA Creativity Global': 'AACG',
 };
 
-const companyList = Object.keys(companyToTicker);
-
-function App() {
+const App = () => {
   const [input, setInput] = useState('');
   const [articles, setArticles] = useState([]);
   const [selectedArticle, setSelectedArticle] = useState(null);
@@ -33,6 +31,8 @@ function App() {
   const [summaries, setSummaries] = useState({});
   const [esgData, setEsgData] = useState({});
   const [isQuestion, setIsQuestion] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const inputRef = useRef(null);
 
   useEffect(() => {
     const saved = localStorage.getItem('searchHistory');
@@ -40,9 +40,11 @@ function App() {
   }, []);
 
   const saveHistory = (term) => {
-    const updated = [...new Set([term, ...history])].slice(0, 5);
-    setHistory(updated);
-    localStorage.setItem('searchHistory', JSON.stringify(updated));
+    setHistory((prev) => {
+      const updated = [...new Set([term, ...prev])].slice(0, 5);
+      localStorage.setItem('searchHistory', JSON.stringify(updated));
+      return updated;
+    });
   };
 
   const handleSpeech = () => {
@@ -53,15 +55,20 @@ function App() {
     }
     const recognition = new SpeechRecognition();
     recognition.lang = 'en-US';
-    recognition.start();
+    recognition.onstart = () => {
+      setIsRecording(true);
+      setError('');
+    };
     recognition.onresult = (event) => {
-      const transcript = event.results[0][0].transcript;
-      setInput(transcript);
+      setInput(event.results[0][0].transcript);
     };
     recognition.onerror = (event) => {
       console.error('Speech error:', event.error);
       setError('Speech recognition failed.');
+      setIsRecording(false);
     };
+    recognition.onend = () => setIsRecording(false);
+    recognition.start();
   };
 
   const handleSearch = () => {
@@ -75,55 +82,50 @@ function App() {
     setEsgData({});
     setIsQuestion(false);
 
-    const lowerInput = input.toLowerCase();
-    const questionCheck = lowerInput.includes('which') || lowerInput.includes('what') || lowerInput.includes('in the');
-    setIsQuestion(questionCheck);
+    const lower = input.toLowerCase();
+    const isQ = lower.includes('which') || lower.includes('what') || lower.includes('in the');
+    setIsQuestion(isQ);
 
-    if (questionCheck) {
+    if (isQ) {
       fetch(`${API_BASE}/api/search_query`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ question: input }),
       })
-        .then(res => res.json())
-        .then(data => {
+        .then((res) => res.json())
+        .then((data) => {
           if (data.error) {
             setError(data.error);
           } else {
             const company = data.company || input;
             setEsgData({ [company]: data });
-            setSummaries({
-              [company]: `ESG Scores: Environmental ${data.environment_score ?? 'N/A'}, Social ${data.social_score ?? 'N/A'}, Governance ${data.governance_score ?? 'N/A'}, Total ${data.total_score ?? 'N/A'}`,
-            });
+            <div style={{ color: '#0d47a1', whiteSpace: 'pre-wrap' }}>
+  {summary}
+</div>
+
+
+
             fetch(`${API_BASE}/api/analyze_companies`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ companies: [company] }),
             })
-              .then(res => res.json())
-              .then(companyData => {
-                const allArticles = [];
-                companyData.forEach(c => {
-                  c.articles.forEach(article => {
-                    allArticles.push({ ...article, company: c.company });
-                  });
+              .then((res) => res.json())
+              .then((arr) => {
+                const all = [];
+                arr.forEach((c) => {
+                  c.articles.forEach((a) => all.push({ ...a, company: c.company }));
                 });
-                setArticles(allArticles);
+                setArticles(all);
               })
               .catch(() => setError('Failed to fetch articles.'));
           }
           saveHistory(input);
         })
-        .catch(() => {
-          setError('Error connecting to backend.');
-        })
+        .catch(() => setError('Error connecting to backend.'))
         .finally(() => setLoading(false));
     } else {
-      const names = input
-        .split(/,| and | & /i)
-        .map(n => n.trim())
-        .filter(n => n.length > 0);
-
+      const names = input.split(/,| and | & /i).map((n) => n.trim()).filter((n) => n.length > 0);
       if (names.length === 0) {
         setError('Please enter valid company names or a query.');
         setLoading(false);
@@ -135,85 +137,135 @@ function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ companies: names }),
       })
-        .then(res => res.json())
-        .then(data => {
-          const allArticles = [];
-          const newSummaries = {};
-          const newEsgData = {};
+        .then((res) => res.json())
+        .then((data) => {
+          const all = [];
+          const newSum = {};
+          const newESG = {};
 
-          data.forEach(companyData => {
-            companyData.articles.forEach(article => {
-              allArticles.push({ ...article, company: companyData.company });
-            });
-
-            newSummaries[companyData.company] = companyData.overall_summary;
-
-            if (companyData.esg) {
-              newEsgData[companyData.company] = companyData.esg;
-            }
+          data.forEach((c) => {
+            c.articles.forEach((a) => all.push({ ...a, company: c.company }));
+            newSum[c.company] = c.overall_summary;
+            if (c.esg) newESG[c.company] = c.esg;
           });
 
-          if (allArticles.length === 0) {
-            setError('No articles found.');
-          }
-
-          setArticles(allArticles);
-          setSummaries(newSummaries);
-          setEsgData(newEsgData);
+          if (all.length === 0) setError('No articles found.');
+          setArticles(all);
+          setSummaries(newSum);
+          setEsgData(newESG);
           saveHistory(input);
         })
-        .catch(() => {
-          setError('Error connecting to backend.');
-        })
+        .catch(() => setError('Error connecting to backend.'))
         .finally(() => setLoading(false));
     }
   };
 
-  const handleSelectArticle = (article) => {
-    setSelectedArticle(article);
-    setAnalysis(article.analysis || 'No analysis available');
+  const handleInputKeyDown = (e) => {
+    if (e.key === 'Enter') handleSearch();
   };
 
   return (
-    <div style={{ maxWidth: 800, margin: 'auto', padding: 20 }}>
-      <h1>ESG News Monitor</h1>
-
-      <div style={{ marginBottom: 10 }}>
-        <input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') handleSearch();
-          }}
-          placeholder="Enter company names or a query (e.g., Which is the ESG score of ATA Creativity Global?)"
-          style={{ padding: 8, width: 400, marginRight: 10 }}
+    <div style={{ maxWidth: 800, margin: 'auto', padding: 20, fontFamily: 'Montserrat, sans-serif' }}>
+    <header style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 20, alignItems: 'center' }}>
+      <h1 style={{ color: '#0d47a1' }}>ESG News Monitor</h1>
+      <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+        <img
+          src="https://www.nus.edu.sg/images/default-source/identity-images/NUS_logo_full-horizontal.jpg"
+          alt="NUS Logo"
+          style={{ height: 120 }} // chỉnh đều chiều cao về 60px
         />
-        <button onClick={handleSearch} style={{ padding: 8 }}>Search</button>
-        <button onClick={handleSpeech} style={{ padding: 8, marginLeft: 5 }}>🎤 Speak</button>
+        <img
+          src="https://ohh12.hcmut.edu.vn/img/news/RQ6hG8A_M89fTWtFX8YYwNPJ.jpg"
+          alt="HUS Logo"
+          style={{ height: 72, borderRadius: 8 }}
+        />
       </div>
+    </header>
 
-      {input && !isQuestion && (
-        <ul style={{ background: '#f9f9f9', listStyle: 'none', padding: 5, border: '1px solid #ccc', maxWidth: 400 }}>
-          {companyList
-            .filter(c => c.toLowerCase().includes(input.toLowerCase()) && !input.includes(c))
-            .map((c, i) => (
-              <li
-                key={i}
-                onClick={() => setInput(input ? input + ', ' + c : c)}
-                style={{ cursor: 'pointer', padding: 5 }}
-              >
-                {c}
-              </li>
-            ))}
-        </ul>
-      )}
+
+      <div style={{ marginBottom: 10, display: 'flex', gap: 10 }}>
+      <input
+        ref={inputRef}
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        onKeyDown={handleInputKeyDown}
+        placeholder="Enter company names or a query..."
+        style={{
+          padding: 10,
+          width: '100%',
+          borderRadius: 8,
+          border: '1px solid #2196f3',
+          outlineColor: '#1976d2',
+          fontSize: 16,
+          fontFamily: 'Montserrat, sans-serif',
+          color: '#0d47a1', // <- thêm dòng này để chữ có màu xanh
+        }}
+      />
+
+        <button
+          onClick={handleSearch}
+          style={{
+            padding: '16px 20px',
+            borderRadius: 20,
+            backgroundColor: '#2196f3',
+            border: 'none',
+            color: 'white',
+            fontWeight: 'bold',
+            fontSize: 16,
+            fontFamily: 'Montserrat, sans-serif',
+            cursor: 'pointer',
+            minWidth: 100,
+            height: 70,
+          }}
+        >
+          Search
+        </button>
+        <button
+          onClick={handleSpeech}
+          disabled={isRecording}
+          style={{
+            padding: '10px 20px',
+            borderRadius: 20,
+            backgroundColor: isRecording ? '#a0cfff' : '#64b5f6',
+            border: 'none',
+            color: 'white',
+            fontWeight: 'bold',
+            fontSize: 16,
+            fontFamily: 'Montserrat, sans-serif',
+            cursor: isRecording ? 'not-allowed' : 'pointer',
+            minWidth: 100,
+            height: 70,
+            display: 'flex',
+            flexDirection: 'row',  // <-- thay đổi này
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 8, // khoảng cách giữa chữ và icon
+          }}
+        >
+          <div style={{ fontSize: '20px', lineHeight: '0.5' }}>🎤</div>
+          <div>Speak</div>
+          
+        </button>
+      </div>
 
       {history.length > 0 && (
         <div style={{ marginTop: 10 }}>
-          <strong>Search History:</strong>
+          <strong style={{ color: '#0d47a1', fontSize: 24 }}>Search History:</strong>
           <ul style={{ paddingLeft: 15 }}>
             {history.map((h, i) => (
-              <li key={i} style={{ cursor: 'pointer' }} onClick={() => setInput(h)}>
+              <li
+                key={i}
+style={{
+        cursor: 'pointer',
+        padding: 4,
+        color: '#0d47a1',  // ✅ thêm dòng này để đổi màu
+        fontSize: 16,
+        fontFamily: 'Montserrat, sans-serif',
+      }}                onClick={() => {
+                  setInput(h);
+                  handleSearch();
+                }}
+              >
                 {h}
               </li>
             ))}
@@ -221,32 +273,57 @@ function App() {
         </div>
       )}
 
-      {loading && <p>Loading...</p>}
+      {loading && <p style={{ color: '#0d47a1' }}>Loading...</p>}
       {error && <p style={{ color: 'red' }}>{error}</p>}
 
       {Object.entries(summaries).length > 0 && (
-        <div style={{ marginTop: 20, background: '#f5f5f5', padding: 10, borderRadius: 5 }}>
-          <h2>Company Summaries</h2>
-          {Object.entries(summaries).map(([company, summary]) => (
-            <div key={company} style={{ marginBottom: 20 }}>
-              <h3>{company}</h3>
-              <EsgInfo
-                symbol={companyToTicker[company] || company}
-                esgData={esgData[company]}
-              />
-              <h4>Investment Recommendation</h4>
-              <ReactMarkdown>{summary}</ReactMarkdown>
-            </div>
-          ))}
-        </div>
-      )}
+  <div style={{ marginTop: 20, background: '#e3f2fd', padding: 15, borderRadius: 8 }}>
+    <h2 style={{ color: '#0d47a1' }}>Company Summaries</h2>
+    {Object.entries(summaries).map(([company, summary], idx) => (
+      <div key={company} style={{ marginBottom: 20 }}>
+        <h3 style={{ color: '#0d47a1' }}>{company}</h3>
+        <EsgInfo symbol={companyToTicker[company] || company} esgData={esgData[company]} />
+        <h4 style={{ color: '#0d47a1' }}>Investment Recommendation</h4>
+        <div style={{ color: '#0d47a1', whiteSpace: 'pre-wrap' }}>
+          <ReactMarkdown
+  components={{
+    p: ({ node, ...props }) => (
+      <p style={{ color: '#0d47a1', marginBottom: 8 }} {...props} />
+    ),
+    // Bổ sung fallback để luôn đảm bảo text có style
+    root: ({ node, ...props }) => (
+      <div style={{ color: '#0d47a1' }} {...props} />
+    ),
+  }}
+>
+  {summary}
+</ReactMarkdown>
 
-      <ArticleList articles={articles} onSelect={handleSelectArticle} />
-      {selectedArticle && (
-        <ArticleDetail article={selectedArticle} analysis={analysis} />
-      )}
+        </div>
+
+      </div>
+    ))}
+  </div>
+)}
+
+
+      <ArticleList articles={articles} onSelect={setSelectedArticle} />
+      {selectedArticle && <ArticleDetail article={selectedArticle} analysis={analysis} />}
+
+      <footer
+        style={{
+          marginTop: 40,
+          paddingTop: 20,
+          borderTop: '1px solid #90caf9',
+          textAlign: 'center',
+          color: '#0d47a1',
+          fontSize: 14,
+        }}
+      >
+        Developed by <strong>Nguyen Thi Thu Hue</strong> – VNU University of Science, 2025
+      </footer>
     </div>
   );
-}
+};
 
 export default App;

@@ -1,0 +1,15 @@
+2025-07-16 14:43:49,643 - INFO - Received request for /api/analyze_companies with companies: ['Should I invest in Walt Disney or WW Grainger Inc']
+2025-07-16 14:43:49,644 - INFO - Fetching news for Should I invest in Walt Disney or WW Grainger Inc (attempt 1)
+2025-07-16 14:43:50,688 - WARNING - No articles found for Should I invest in Walt Disney or WW Grainger Inc (attempt 1)
+2025-07-16 14:43:51,698 - INFO - Fetching news for Should I invest in Walt Disney or WW Grainger Inc (attempt 2)
+2025-07-16 14:43:52,749 - WARNING - No articles found for Should I invest in Walt Disney or WW Grainger Inc (attempt 2)
+2025-07-16 14:43:53,756 - INFO - Fetching news for Should I invest in Walt Disney or WW Grainger Inc (attempt 3)
+2025-07-16 14:43:54,763 - WARNING - No articles found for Should I invest in Walt Disney or WW Grainger Inc (attempt 3)
+2025-07-16 14:43:55,789 - INFO - Returning analysis for 1 companies
+2025-07-16 14:44:27,368 - INFO - Received request for /api/analyze_companies with companies: ['Walt Disney']
+2025-07-16 14:44:27,369 - INFO - Fetching news for Walt Disney (attempt 1)
+2025-07-16 14:44:28,432 - INFO - Found 5 articles for Walt Disney
+2025-07-16 14:45:48,865 - INFO - Returning analysis for 1 companies
+2025-07-16 14:47:13,907 - INFO - Received request for /api/analyze_companies with companies: ['Walt Disney']
+2025-07-16 14:47:13,908 - INFO - Fetching news for Walt Disney (attempt 1)
+2025-07-16 14:47:14,953 - INFO - Found 5 articles for Walt Disney

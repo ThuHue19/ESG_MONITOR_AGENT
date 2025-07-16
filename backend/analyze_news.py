@@ -30,21 +30,21 @@ def markdown_to_plain_text(md_text: str) -> str:
 # --- 1. Extract keywords and analyze intent from question ---
 def extract_keywords_from_question_gemini(question: str) -> str:
     prompt = f"""
-You are an ESG investment assistant tasked with analyzing the following question.
+You are an expert ESG analyst assistant.
 
-Tasks:
-1. Extract the most important **keywords** (e.g., company names, ESG-related topics, industries).
-2. Identify the **main intent** of the question (e.g., ESG risk, opportunity, regulatory impact).
-3. Provide a **brief answer** to the question (2–3 sentences), using relevant data or context if possible.
-4. Suggest 2–3 **related search topics** or sub-keywords for article look-up.
+Given the user question, please do the following:
 
-Respond using this format:
-- Keywords: ...
-- Question Intent: ...
-- Quick Answer: ...
-- Suggested Search Terms: ...
+1. Extract the company names mentioned in the question (if any). List them separated by commas.
+2. Extract the main ESG-related keywords or topics.
+3. Identify the intent of the question (investment advice, comparison, risk evaluation, etc.).
 
-Question: {question}
+Return your answer exactly in this format:
+
+- Companies: company1, company2, ...
+- Keywords: keyword1, keyword2, ...
+- Intent: ...
+
+Question: "{question}"
 """
     try:
         response = model.generate_content(prompt)
