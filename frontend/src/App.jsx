@@ -327,23 +327,18 @@ const App = () => {
       {selectedArticle && <ArticleDetail article={selectedArticle} analysis={analysis} />}
 
       <footer
-        style={{
-          position: 'fixed',
-          bottom: 0,
-          left: 0,
-          width: '100%',
-          backgroundColor: '#e3f2fd',
-          padding: '10px 0',
-          borderTop: '1px solid #90caf9',
-          textAlign: 'center',
-          color: '#0d47a1',
-          fontSize: 14,
-          zIndex: 1000,
-        }}
-      >
-        Developed by <strong>Nguyen Thi Thu Hue</strong> – VNU University of Science, 2025
-      </footer>
-    </div>
+      style={{
+        backgroundColor: '#e3f2fd',
+        padding: '10px 0',
+        borderTop: '1px solid #90caf9',
+        textAlign: 'center',
+        color: '#0d47a1',
+        fontSize: 14,
+      }}
+    >
+      Developed by <strong>Nguyen Thi Thu Hue</strong> – VNU University of Science, 2025
+    </footer>
+  </div>
   );
 };
 
