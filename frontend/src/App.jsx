@@ -99,11 +99,6 @@ const App = () => {
           } else {
             const company = data.company || input;
             setEsgData({ [company]: data });
-            <div style={{ color: '#0d47a1', whiteSpace: 'pre-wrap' }}>
-  {summary}
-</div>
-
-
 
             fetch(`${API_BASE}/api/analyze_companies`, {
               method: 'POST',
@@ -165,43 +160,50 @@ const App = () => {
   };
 
   return (
-    <div style={{ maxWidth: 800, margin: 'auto', padding: 20, fontFamily: 'Montserrat, sans-serif' }}>
-    <header style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 20, alignItems: 'center' }}>
-      <h1 style={{ color: '#0d47a1' }}>ESG News Monitor</h1>
-      <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
-        <img
-          src="https://www.nus.edu.sg/images/default-source/identity-images/NUS_logo_full-horizontal.jpg"
-          alt="NUS Logo"
-          style={{ height: 120 }} // chỉnh đều chiều cao về 60px
-        />
-        <img
-          src="https://ohh12.hcmut.edu.vn/img/news/RQ6hG8A_M89fTWtFX8YYwNPJ.jpg"
-          alt="HUS Logo"
-          style={{ height: 72, borderRadius: 8 }}
-        />
-      </div>
-    </header>
+    <div style={{ maxWidth: 800, margin: 'auto', padding: 20, paddingBottom: 100, fontFamily: 'Montserrat, sans-serif' }}>
+      <style>
+        {`
+          @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.4; }
+            100% { opacity: 1; }
+          }
+        `}
+      </style>
 
+      <header style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 20, alignItems: 'center' }}>
+        <h1 style={{ color: '#0d47a1' }}>ESG News Monitor</h1>
+        <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+          <img
+            src="https://www.nus.edu.sg/images/default-source/identity-images/NUS_logo_full-horizontal.jpg"
+            alt="NUS Logo"
+            style={{ height: 120 }}
+          />
+          <img
+            src="https://ohh12.hcmut.edu.vn/img/news/RQ6hG8A_M89fTWtFX8YYwNPJ.jpg"
+            alt="HUS Logo"
+            style={{ height: 72, borderRadius: 8 }}
+          />
+        </div>
+      </header>
 
       <div style={{ marginBottom: 10, display: 'flex', gap: 10 }}>
-      <input
-        ref={inputRef}
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-        onKeyDown={handleInputKeyDown}
-        placeholder="Enter company names or a query..."
-        style={{
-          padding: 10,
-          width: '100%',
-          borderRadius: 8,
-          border: '1px solid #2196f3',
-          outlineColor: '#1976d2',
-          fontSize: 16,
-          fontFamily: 'Montserrat, sans-serif',
-          color: '#0d47a1', // <- thêm dòng này để chữ có màu xanh
-        }}
-      />
-
+        <input
+          ref={inputRef}
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={handleInputKeyDown}
+          placeholder="Enter company names or a query..."
+          style={{
+            padding: 10,
+            width: '100%',
+            borderRadius: 8,
+            border: '1px solid #2196f3',
+            outlineColor: '#1976d2',
+            fontSize: 16,
+            color: '#0d47a1',
+          }}
+        />
         <button
           onClick={handleSearch}
           style={{
@@ -212,7 +214,6 @@ const App = () => {
             color: 'white',
             fontWeight: 'bold',
             fontSize: 16,
-            fontFamily: 'Montserrat, sans-serif',
             cursor: 'pointer',
             minWidth: 100,
             height: 70,
@@ -231,20 +232,26 @@ const App = () => {
             color: 'white',
             fontWeight: 'bold',
             fontSize: 16,
-            fontFamily: 'Montserrat, sans-serif',
             cursor: isRecording ? 'not-allowed' : 'pointer',
             minWidth: 100,
             height: 70,
             display: 'flex',
-            flexDirection: 'row',  // <-- thay đổi này
             alignItems: 'center',
             justifyContent: 'center',
-            gap: 8, // khoảng cách giữa chữ và icon
+            gap: 8,
           }}
         >
-          <div style={{ fontSize: '20px', lineHeight: '0.5' }}>🎤</div>
-          <div>Speak</div>
-          
+          {isRecording ? (
+            <>
+              <div style={{ fontSize: '20px', animation: 'pulse 1s infinite' }}>🔴</div>
+              <div>Listening...</div>
+            </>
+          ) : (
+            <>
+              <div style={{ fontSize: '20px' }}>🎤</div>
+              <div>Speak</div>
+            </>
+          )}
         </button>
       </div>
 
@@ -255,13 +262,8 @@ const App = () => {
             {history.map((h, i) => (
               <li
                 key={i}
-style={{
-        cursor: 'pointer',
-        padding: 4,
-        color: '#0d47a1',  // ✅ thêm dòng này để đổi màu
-        fontSize: 16,
-        fontFamily: 'Montserrat, sans-serif',
-      }}                onClick={() => {
+                style={{ cursor: 'pointer', padding: 4, color: '#0d47a1', fontSize: 16 }}
+                onClick={() => {
                   setInput(h);
                   handleSearch();
                 }}
@@ -277,65 +279,66 @@ style={{
       {error && <p style={{ color: 'red' }}>{error}</p>}
 
       {Object.entries(summaries).length > 0 && (
-  <div
-    style={{
-      marginTop: 20,
-      backgroundColor: '#e3f2fd',  // lớp nền nhạt bên ngoài
-      padding: 15,
-      borderRadius: 8,
-      border: '1px solid #90caf9',
-    }}
-  >
-    <h2 style={{ color: '#0d47a1' }}>Company Summaries</h2>
-    {Object.entries(summaries).map(([company, summary], idx) => (
-      <div
-        key={company}
-        style={{
-          marginBottom: 20,
-          backgroundColor: 'rgba(13, 71, 161, 0.12)',  // lớp nền đậm hơn bên trong
-          padding: 20,
-          borderRadius: 8,
-          color: '#0d47a1',
-          lineHeight: 1.6,
-        }}
-      >
-        <h3 style={{ color: '#0d47a1' }}>{company}</h3>
-        <EsgInfo symbol={companyToTicker[company] || company} esgData={esgData[company]} />
-        <h4 style={{ color: '#0d47a1' }}>Investment Recommendation</h4>
-        <ReactMarkdown
-          components={{
-            p: ({ node, ...props }) => (
-              <p style={{ color: '#0d47a1', marginBottom: 8 }} {...props} />
-            ),
-            strong: ({ node, ...props }) => <strong style={{ color: '#0d47a1' }} {...props} />,
-            em: ({ node, ...props }) => <em style={{ color: '#0d47a1' }} {...props} />,
-            li: ({ node, ...props }) => <li style={{ color: '#0d47a1' }} {...props} />,
-            a: ({ node, ...props }) => <a style={{ color: '#0d47a1' }} {...props} />,
-            code: ({ node, ...props }) => <code style={{ color: '#0d47a1' }} {...props} />,
-            div: ({ node, ...props }) => <div style={{ color: '#0d47a1' }} {...props} />,
-            span: ({ node, ...props }) => <span style={{ color: '#0d47a1' }} {...props} />,
+        <div
+          style={{
+            marginTop: 20,
+            backgroundColor: '#e3f2fd',
+            padding: 15,
+            borderRadius: 8,
+            border: '1px solid #90caf9',
           }}
         >
-          {summary}
-        </ReactMarkdown>
-      </div>
-    ))}
-  </div>
-)}
-
-
+          <h2 style={{ color: '#0d47a1' }}>Company Summaries</h2>
+          {Object.entries(summaries).map(([company, summary]) => (
+            <div
+              key={company}
+              style={{
+                marginBottom: 20,
+                backgroundColor: 'rgba(13, 71, 161, 0.12)',
+                padding: 20,
+                borderRadius: 8,
+                color: '#0d47a1',
+                lineHeight: 1.6,
+              }}
+            >
+              <h3>{company}</h3>
+              <EsgInfo symbol={companyToTicker[company] || company} esgData={esgData[company]} />
+              <h4>Investment Recommendation</h4>
+              <ReactMarkdown
+                components={{
+                  p: ({ node, ...props }) => <p style={{ color: '#0d47a1', marginBottom: 8 }} {...props} />,
+                  strong: ({ node, ...props }) => <strong style={{ color: '#0d47a1' }} {...props} />,
+                  em: ({ node, ...props }) => <em style={{ color: '#0d47a1' }} {...props} />,
+                  li: ({ node, ...props }) => <li style={{ color: '#0d47a1' }} {...props} />,
+                  a: ({ node, ...props }) => <a style={{ color: '#0d47a1' }} {...props} />,
+                  code: ({ node, ...props }) => <code style={{ color: '#0d47a1' }} {...props} />,
+                  div: ({ node, ...props }) => <div style={{ color: '#0d47a1' }} {...props} />,
+                  span: ({ node, ...props }) => <span style={{ color: '#0d47a1' }} {...props} />,
+                }}
+              >
+                {summary}
+              </ReactMarkdown>
+            </div>
+          ))}
+        </div>
+      )}
 
       <ArticleList articles={articles} onSelect={setSelectedArticle} />
       {selectedArticle && <ArticleDetail article={selectedArticle} analysis={analysis} />}
 
       <footer
         style={{
-          marginTop: 40,
-          paddingTop: 20,
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          width: '100%',
+          backgroundColor: '#e3f2fd',
+          padding: '10px 0',
           borderTop: '1px solid #90caf9',
           textAlign: 'center',
           color: '#0d47a1',
           fontSize: 14,
+          zIndex: 1000,
         }}
       >
         Developed by <strong>Nguyen Thi Thu Hue</strong> – VNU University of Science, 2025
